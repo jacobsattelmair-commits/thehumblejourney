@@ -50,15 +50,12 @@ a:hover { text-decoration-color: currentColor; }
   margin: 0 auto;
   padding: 0 1.5rem;
 }
-.container--narrow {
-  max-width: 620px;
-}
+.container--narrow { max-width: 620px; }
 .container--wide {
   max-width: 1100px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
-
 .label {
   display: inline-block;
   font-size: 0.72rem;
@@ -112,7 +109,6 @@ a:hover { text-decoration-color: currentColor; }
 }
 .nav__links a:hover,
 .nav__links a.active { color: var(--color-accent); }
-
 .nav__toggle {
   display: none;
   flex-direction: column;
@@ -138,27 +134,13 @@ a:hover { text-decoration-color: currentColor; }
   align-items: center;
   padding: 6rem 0;
 }
-.hero__name {
-  font-size: clamp(2rem, 5vw, 3rem);
-  margin-bottom: 1rem;
-}
+.hero__name { font-size: clamp(2rem, 5vw, 3rem); margin-bottom: 1rem; }
 .hero__tagline {
   font-size: 1.125rem;
   color: var(--color-muted);
   max-width: 500px;
   margin-bottom: 2.5rem;
 }
-.hero__links { display: flex; gap: 1.5rem; flex-wrap: wrap; }
-.hero__cta {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--color-accent);
-  text-decoration: none;
-  transition: color var(--trans), gap var(--trans);
-}
-.hero__cta:hover { color: var(--color-accent-dk); text-decoration: none; }
-.hero__cta--secondary { color: var(--color-muted); }
-.hero__cta--secondary:hover { color: var(--color-text); }
 
 /* ─── Page Header ────────────────────────────────── */
 .page-header {
@@ -170,12 +152,7 @@ a:hover { text-decoration-color: currentColor; }
 
 /* ─── Posts ────────────────────────────────────────── */
 .posts { padding: 3rem 0 6rem; }
-.posts__empty {
-  color: var(--color-muted);
-  font-style: italic;
-  padding: 3rem 0;
-}
-
+.posts__empty { color: var(--color-muted); font-style: italic; padding: 3rem 0; }
 .post-entry {
   display: block;
   padding: 1.75rem 0;
@@ -184,13 +161,7 @@ a:hover { text-decoration-color: currentColor; }
   color: inherit;
 }
 .post-entry:first-child { border-top: 1px solid var(--color-border); }
-.post-entry:hover .post-entry__title { color: var(--color-accent); }
-.post-entry__meta {
-  font-size: 0.8rem;
-  color: var(--color-muted);
-  letter-spacing: 0.03em;
-  margin-bottom: 0.4rem;
-}
+.post-entry__meta { font-size: 0.8rem; color: var(--color-muted); letter-spacing: 0.03em; margin-bottom: 0.4rem; }
 .post-entry__title {
   font-family: var(--font-serif);
   font-size: 1.3rem;
@@ -198,48 +169,13 @@ a:hover { text-decoration-color: currentColor; }
   transition: color var(--trans);
   margin-bottom: 0.5rem;
 }
-.post-entry__excerpt {
-  font-size: 0.9rem;
-  color: var(--color-muted);
-  line-height: 1.6;
-}
-.post-entry__date {
-  font-size: 0.8rem;
-  color: var(--color-muted);
-  margin-bottom: 0.4rem;
-}
-.post-entry__title a {
-  color: var(--color-text);
-  text-decoration: none;
-  transition: color var(--trans);
-}
+.post-entry__excerpt { font-size: 0.9rem; color: var(--color-muted); line-height: 1.6; }
+.post-entry__date { font-size: 0.8rem; color: var(--color-muted); margin-bottom: 0.4rem; }
+.post-entry__title a { color: var(--color-text); text-decoration: none; transition: color var(--trans); }
 .post-entry__title a:hover { color: var(--color-accent); }
-.post-date {
-  font-size: 0.85rem;
-  color: var(--color-muted);
-  margin-bottom: 2.5rem;
-  display: block;
-}
+.post-date { font-size: 0.85rem; color: var(--color-muted); margin-bottom: 2.5rem; display: block; }
 .post-body { padding: 2.5rem 0 6rem; font-size: 1.0625rem; line-height: 1.8; }
 .post-body p { margin-bottom: 1.25rem; }
-.post-body h2 { font-size: 1.4rem; margin: 2.5rem 0 0.75rem; }
-.post-body h3 { font-size: 1.15rem; margin: 2rem 0 0.5rem; }
-
-/* ─── Single Post ──────────────────────────────────── */
-.post-content {
-  padding: 3rem 0 6rem;
-}
-.post-content h1 {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  margin-bottom: 0.5rem;
-}
-.post-content .post-date {
-  font-size: 0.85rem;
-  color: var(--color-muted);
-  margin-bottom: 2.5rem;
-  display: block;
-}
-.post-body { font-size: 1.0625rem; line-height: 1.8; }
 .post-body h2 { font-size: 1.4rem; margin: 2.5rem 0 0.75rem; }
 .post-body h3 { font-size: 1.15rem; margin: 2rem 0 0.5rem; }
 .post-body p + p { margin-top: 1.25rem; }
@@ -307,6 +243,7 @@ a:hover { text-decoration-color: currentColor; }
   border-radius: var(--radius);
   background: var(--color-surface);
   cursor: pointer;
+  position: relative;
 }
 .photo-item img {
   width: 100%;
@@ -315,6 +252,17 @@ a:hover { text-decoration-color: currentColor; }
   transition: transform 0.3s ease;
 }
 .photo-item:hover img { transform: scale(1.03); }
+.photo-caption {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.6));
+  color: white;
+  font-size: 0.75rem;
+  padding: 1.5rem 0.65rem 0.5rem;
+  text-align: center;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
 
 /* Lightbox */
 #lightbox {
@@ -326,11 +274,23 @@ a:hover { text-decoration-color: currentColor; }
   justify-content: center;
   padding: 2rem;
 }
+#lightboxInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
 #lightbox img {
   max-width: 90vw;
-  max-height: 85vh;
+  max-height: 80vh;
   object-fit: contain;
   border-radius: 4px;
+}
+#lightboxCaption {
+  color: rgba(255,255,255,0.75);
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  text-align: center;
 }
 #lightboxClose {
   position: fixed;
@@ -356,10 +316,7 @@ a:hover { text-decoration-color: currentColor; }
 #lightboxNext { right: 0.5rem; }
 
 /* ─── Footer ─────────────────────────────────────────── */
-footer {
-  border-top: 1px solid var(--color-border);
-  padding: 2rem 0;
-}
+footer { border-top: 1px solid var(--color-border); padding: 2rem 0; }
 footer p { font-size: 0.78rem; color: var(--color-muted); }
 
 /* ─── Responsive ───────────────────────────────────── */
@@ -379,11 +336,9 @@ footer p { font-size: 0.78rem; color: var(--color-muted); }
   .nav__links a { padding: 0.6rem 0; font-size: 1rem; border-bottom: 1px solid var(--color-border); }
   .nav__links li:last-child a { border-bottom: none; }
   .nav__toggle { display: flex; }
-
   .photo-grid { grid-template-columns: repeat(2, 1fr); }
   .hero { padding: 3rem 0; }
 }
-
 @media (max-width: 400px) {
   .photo-grid { grid-template-columns: 1fr; }
 }
