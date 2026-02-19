@@ -35,18 +35,19 @@
     <section class="photos-section">
       <div class="container">
         <div class="photo-grid" id="photoGrid">
-          <!-- Photos will go here. Each one looks like:
-          <div class="photo-item">
-            <img src="photos/your-photo.jpg" alt="Description of photo" loading="lazy">
-          </div>
-          -->
-          <div class="posts__empty">
-            <p>Photos coming soon.</p>
-          </div>
+          <div class="posts__empty" id="loadingMsg"><p>Loading photos…</p></div>
         </div>
       </div>
     </section>
   </main>
+
+  <!-- Lightbox -->
+  <div id="lightbox" style="display:none;" role="dialog" aria-modal="true">
+    <button id="lightboxClose" aria-label="Close">&times;</button>
+    <button id="lightboxPrev" aria-label="Previous">&#8249;</button>
+    <img id="lightboxImg" src="" alt="">
+    <button id="lightboxNext" aria-label="Next">&#8250;</button>
+  </div>
 
   <footer>
     <div class="container">
@@ -66,6 +67,76 @@
         }
       });
     }
+
+    const REPO = 'jacobsattelmair-commits/thehumblejourney';
+    const PHOTOS_API = 'https://api.github.com/repos/' + REPO + '/contents/thehumblejourney-site/photos';
+    const RAW_BASE = 'https://raw.githubusercontent.com/' + REPO + '/main/thehumblejourney-site/photos/';
+    const IMAGE_EXTS = /\.(jpg|jpeg|png|gif|webp|avif)$/i;
+
+    let photoUrls = [];
+    let currentIndex = 0;
+
+    async function loadPhotos() {
+      const grid = document.getElementById('photoGrid');
+      try {
+        const res = await fetch(PHOTOS_API);
+        if (!res.ok) throw new Error('Could not fetch photos');
+        const files = await res.json();
+        const images = files.filter(f => IMAGE_EXTS.test(f.name));
+        if (images.length === 0) {
+          grid.innerHTML = '<div class="posts__empty"><p>No photos yet.</p></div>';
+          return;
+        }
+        photoUrls = images.map(f => RAW_BASE + encodeURIComponent(f.name));
+        grid.innerHTML = images.map((f, i) => `
+          <div class="photo-item">
+            <img src="${RAW_BASE + encodeURIComponent(f.name)}"
+                 alt="${f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')}"
+                 loading="lazy"
+                 data-index="${i}">
+          </div>
+        `).join('');
+        grid.querySelectorAll('img').forEach(img => {
+          img.addEventListener('click', () => openLightbox(parseInt(img.dataset.index)));
+        });
+      } catch (err) {
+        grid.innerHTML = '<div class="posts__empty"><p>Could not load photos right now.</p></div>';
+        console.error(err);
+      }
+    }
+
+    function openLightbox(index) {
+      currentIndex = index;
+      document.getElementById('lightboxImg').src = photoUrls[currentIndex];
+      document.getElementById('lightbox').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+    document.getElementById('lightboxPrev').addEventListener('click', () => {
+      currentIndex = (currentIndex - 1 + photoUrls.length) % photoUrls.length;
+      document.getElementById('lightboxImg').src = photoUrls[currentIndex];
+    });
+    document.getElementById('lightboxNext').addEventListener('click', () => {
+      currentIndex = (currentIndex + 1) % photoUrls.length;
+      document.getElementById('lightboxImg').src = photoUrls[currentIndex];
+    });
+    document.getElementById('lightbox').addEventListener('click', function(e) {
+      if (e.target === this) closeLightbox();
+    });
+    document.addEventListener('keydown', e => {
+      if (document.getElementById('lightbox').style.display === 'none') return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') document.getElementById('lightboxPrev').click();
+      if (e.key === 'ArrowRight') document.getElementById('lightboxNext').click();
+    });
+
+    loadPhotos();
   </script>
 </body>
 </html>
