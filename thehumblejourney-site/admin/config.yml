@@ -1,15 +1,14 @@
 backend:
-  name: github
-  repo: jacobsattelmair-commits/thehumblejourney
+  name: git-gateway
   branch: main
 
-media_folder: "photos"
+media_folder: "thehumblejourney-site/photos"
 public_folder: "/photos"
 
 collections:
   - name: "posts"
     label: "Thoughts"
-    folder: "posts"
+    folder: "thehumblejourney-site/posts"
     create: true
     slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
     fields:
