@@ -26,9 +26,7 @@
   <main>
     <section class="page-header">
       <div class="container">
-        <span class="label">Writing</span>
-        <h1>Thoughts</h1>
-        <p class="page-intro">Ideas, observations, and essays — on health, aging, building things, and more.</p>
+        <span class="label">Thoughts</span>
       </div>
     </section>
 
@@ -77,6 +75,7 @@
       });
     }
 
+    // --- Parse frontmatter from markdown ---
     function parseFrontmatter(text) {
       const match = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
       if (!match) return { data: {}, content: text };
@@ -91,24 +90,14 @@
       return { data, content: match[2] };
     }
 
+    // --- Format date nicely ---
     function formatDate(dateStr) {
       if (!dateStr) return '';
       const d = new Date(dateStr + 'T12:00:00');
       return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     }
 
-    function getPreview(content) {
-      const plain = content
-        .replace(/^#+\s+.*/gm, '')
-        .replace(/!\[.*?\]\(.*?\)/g, '')
-        .replace(/\[([^\]]+)\]\(.*?\)/g, '$1')
-        .replace(/[*_`~]/g, '')
-        .replace(/\n{2,}/g, ' ')
-        .replace(/\n/g, ' ')
-        .trim();
-      return plain.length > 280 ? plain.slice(0, 280).replace(/\s\S+$/, '') + '\u2026' : plain;
-    }
-
+    // --- Fetch list of post files from GitHub ---
     const REPO = 'jacobsattelmair-commits/thehumblejourney';
     const POSTS_PATH = 'thehumblejourney-site/posts';
     const RAW_BASE = 'https://raw.githubusercontent.com/' + REPO + '/main/' + POSTS_PATH + '/';
@@ -120,13 +109,14 @@
         const res = await fetch(API_BASE);
         if (!res.ok) throw new Error('Could not fetch posts');
         const files = await res.json();
-        const mdFiles = files.filter(f => f.name.endsWith('.md')).reverse();
+        const mdFiles = files.filter(f => f.name.endsWith('.md')).reverse(); // newest first
 
         if (mdFiles.length === 0) {
-          list.innerHTML = '<div class="posts__empty"><p>No posts yet.<\/p><\/div>';
+          list.innerHTML = '<div class="posts__empty"><p>No posts yet.</p></div>';
           return;
         }
 
+        // Fetch all post contents in parallel
         const posts = await Promise.all(mdFiles.map(async f => {
           const r = await fetch(RAW_BASE + f.name);
           const text = await r.text();
@@ -134,22 +124,39 @@
           return { filename: f.name, data, content };
         }));
 
+        // Check if we're viewing a specific post (via hash)
         const hash = window.location.hash.slice(1);
         if (hash) {
           const post = posts.find(p => p.filename === decodeURIComponent(hash));
           if (post) { showPost(post); return; }
         }
 
+        // Generate a plain-text preview from post body
+        function getPreview(content) {
+          // Strip markdown syntax and get first ~300 chars
+          const plain = content
+            .replace(/^#+\s+.*/gm, '')        // remove headings
+            .replace(/!\[.*?\]\(.*?\)/g, '')   // remove images
+            .replace(/\[([^\]]+)\]\(.*?\)/g, '$1') // links -> text
+            .replace(/[*_`~]/g, '')            // remove emphasis chars
+            .replace(/\n{2,}/g, ' ')           // collapse paragraphs
+            .replace(/\n/g, ' ')               // collapse line breaks
+            .trim();
+          return plain.length > 280 ? plain.slice(0, 280).replace(/\s\S+$/, '') + '…' : plain;
+        }
+
+        // Render list
         list.innerHTML = posts.map(p => `
           <article class="post-entry">
             <h2 class="post-entry__title">
-              <a href="#${encodeURIComponent(p.filename)}">${p.data.title || 'Untitled'}<\/a>
-            <\/h2>
-            <p class="post-entry__date">${formatDate(p.data.date)}<\/p>
-            <p class="post-entry__excerpt">${p.data.excerpt || getPreview(p.content)}<\/p>
-          <\/article>
+              <a href="#${encodeURIComponent(p.filename)}">${p.data.title || 'Untitled'}</a>
+            </h2>
+            <p class="post-entry__date">${formatDate(p.data.date)}</p>
+            <p class="post-entry__excerpt">${p.data.excerpt || getPreview(p.content)}</p>
+          </article>
         `).join('');
 
+        // Handle clicking a post
         list.querySelectorAll('a[href^="#"]').forEach(a => {
           a.addEventListener('click', async e => {
             e.preventDefault();
@@ -163,7 +170,7 @@
         });
 
       } catch (err) {
-        list.innerHTML = '<div class="posts__empty"><p>Could not load posts right now.<\/p><\/div>';
+        list.innerHTML = '<div class="posts__empty"><p>Could not load posts right now.</p></div>';
         console.error(err);
       }
     }
@@ -178,6 +185,7 @@
       view.style.display = '';
     }
 
+    // Handle back navigation
     window.addEventListener('popstate', () => {
       if (!window.location.hash) {
         document.getElementById('postView').style.display = 'none';
