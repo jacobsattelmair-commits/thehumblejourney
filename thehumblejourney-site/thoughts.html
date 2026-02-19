@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thoughts — The Humble Journey</title>
+  <meta name="description" content="Writing by Jacob Sattelmair.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__name">The Humble Journey</a>
+      <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="thoughts.html" class="active">Thoughts</a></li>
+        <li><a href="bio.html">Bio</a></li>
+        <li><a href="photos.html">Photos</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <section class="page-header">
+      <div class="container">
+        <span class="label">Writing</span>
+        <h1>Thoughts</h1>
+        <p class="page-intro">Ideas, observations, and essays — on health, aging, building things, and more.</p>
+      </div>
+    </section>
+
+    <section class="posts">
+      <div class="container">
+        <div class="posts__list" id="postsList">
+          <!-- Posts will be listed here. Add new posts as post-entry divs. -->
+          <div class="posts__empty">
+            <p>Posts coming soon.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Jacob Sattelmair &mdash; thehumblejourney.com</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

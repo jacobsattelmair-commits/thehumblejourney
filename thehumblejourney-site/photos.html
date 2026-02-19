@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photos — The Humble Journey</title>
+  <meta name="description" content="Photos by Jacob Sattelmair.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="index.html" class="nav__name">The Humble Journey</a>
+      <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="thoughts.html">Thoughts</a></li>
+        <li><a href="bio.html">Bio</a></li>
+        <li><a href="photos.html" class="active">Photos</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <section class="page-header">
+      <div class="container">
+        <span class="label">Gallery</span>
+        <h1>Photos</h1>
+        <p class="page-intro">A few things worth seeing.</p>
+      </div>
+    </section>
+
+    <section class="photos-section">
+      <div class="container">
+        <div class="photo-grid" id="photoGrid">
+          <!-- Photos will go here. Each one looks like:
+          <div class="photo-item">
+            <img src="photos/your-photo.jpg" alt="Description of photo" loading="lazy">
+          </div>
+          -->
+          <div class="posts__empty">
+            <p>Photos coming soon.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Jacob Sattelmair &mdash; thehumblejourney.com</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>

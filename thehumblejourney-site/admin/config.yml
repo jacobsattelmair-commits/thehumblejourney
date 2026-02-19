@@ -1,0 +1,19 @@
+backend:
+  name: github
+  repo: jacobsattelmair-commits/thehumblejourney
+  branch: main
+
+media_folder: "photos"
+public_folder: "/photos"
+
+collections:
+  - name: "posts"
+    label: "Thoughts"
+    folder: "posts"
+    create: true
+    slug: "{{year}}-{{month}}-{{day}}-{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Date", name: "date", widget: "datetime", format: "YYYY-MM-DD" }
+      - { label: "Excerpt", name: "excerpt", widget: "string", required: false, hint: "A short summary shown in the post list." }
+      - { label: "Body", name: "body", widget: "markdown" }
