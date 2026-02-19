@@ -45,7 +45,10 @@
   <div id="lightbox" style="display:none;" role="dialog" aria-modal="true">
     <button id="lightboxClose" aria-label="Close">&times;</button>
     <button id="lightboxPrev" aria-label="Previous">&#8249;</button>
-    <img id="lightboxImg" src="" alt="">
+    <div id="lightboxInner">
+      <img id="lightboxImg" src="" alt="">
+      <p id="lightboxCaption"></p>
+    </div>
     <button id="lightboxNext" aria-label="Next">&#8250;</button>
   </div>
 
@@ -88,12 +91,15 @@
           return;
         }
         photoUrls = images.map(f => RAW_BASE + encodeURIComponent(f.name));
+        const captions = images.map(f => f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '));
+        window._photoCaptions = captions;
         grid.innerHTML = images.map((f, i) => `
           <div class="photo-item">
             <img src="${RAW_BASE + encodeURIComponent(f.name)}"
-                 alt="${f.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')}"
+                 alt="${captions[i]}"
                  loading="lazy"
                  data-index="${i}">
+            <span class="photo-caption">${captions[i]}</span>
           </div>
         `).join('');
         grid.querySelectorAll('img').forEach(img => {
@@ -108,6 +114,7 @@
     function openLightbox(index) {
       currentIndex = index;
       document.getElementById('lightboxImg').src = photoUrls[currentIndex];
+      document.getElementById('lightboxCaption').textContent = (window._photoCaptions || [])[currentIndex] || '';
       document.getElementById('lightbox').style.display = 'flex';
       document.body.style.overflow = 'hidden';
     }
@@ -121,10 +128,12 @@
     document.getElementById('lightboxPrev').addEventListener('click', () => {
       currentIndex = (currentIndex - 1 + photoUrls.length) % photoUrls.length;
       document.getElementById('lightboxImg').src = photoUrls[currentIndex];
+      document.getElementById('lightboxCaption').textContent = (window._photoCaptions || [])[currentIndex] || '';
     });
     document.getElementById('lightboxNext').addEventListener('click', () => {
       currentIndex = (currentIndex + 1) % photoUrls.length;
       document.getElementById('lightboxImg').src = photoUrls[currentIndex];
+      document.getElementById('lightboxCaption').textContent = (window._photoCaptions || [])[currentIndex] || '';
     });
     document.getElementById('lightbox').addEventListener('click', function(e) {
       if (e.target === this) closeLightbox();
