@@ -35,14 +35,27 @@
     <section class="posts">
       <div class="container">
         <div class="posts__list" id="postsList">
-          <!-- Posts will be listed here. Add new posts as post-entry divs. -->
-          <div class="posts__empty">
-            <p>Posts coming soon.</p>
-          </div>
+          <div class="posts__empty" id="loadingMsg"><p>Loading posts…</p></div>
         </div>
       </div>
     </section>
   </main>
+
+  <!-- Single post view (hidden by default) -->
+  <div id="postView" style="display:none;">
+    <section class="page-header">
+      <div class="container">
+        <a href="thoughts.html" class="back-link">&larr; All thoughts</a>
+        <h1 id="postTitle"></h1>
+        <p class="post-date" id="postDate"></p>
+      </div>
+    </section>
+    <section class="post-body">
+      <div class="container container--narrow">
+        <div id="postContent"></div>
+      </div>
+    </section>
+  </div>
 
   <footer>
     <div class="container">
@@ -51,6 +64,7 @@
   </footer>
 
   <script src="main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
     if (window.netlifyIdentity) {
@@ -62,6 +76,105 @@
         }
       });
     }
+
+    function parseFrontmatter(text) {
+      const match = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+      if (!match) return { data: {}, content: text };
+      const data = {};
+      match[1].split('\n').forEach(line => {
+        const colonIdx = line.indexOf(':');
+        if (colonIdx === -1) return;
+        const key = line.slice(0, colonIdx).trim();
+        const val = line.slice(colonIdx + 1).trim().replace(/^"|"$/g, '');
+        data[key] = val;
+      });
+      return { data, content: match[2] };
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T12:00:00');
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    const REPO = 'jacobsattelmair-commits/thehumblejourney';
+    const POSTS_PATH = 'thehumblejourney-site/posts';
+    const RAW_BASE = 'https://raw.githubusercontent.com/' + REPO + '/main/' + POSTS_PATH + '/';
+    const API_BASE = 'https://api.github.com/repos/' + REPO + '/contents/' + POSTS_PATH;
+
+    async function loadPosts() {
+      const list = document.getElementById('postsList');
+      try {
+        const res = await fetch(API_BASE);
+        if (!res.ok) throw new Error('Could not fetch posts');
+        const files = await res.json();
+        const mdFiles = files.filter(f => f.name.endsWith('.md')).reverse();
+
+        if (mdFiles.length === 0) {
+          list.innerHTML = '<div class="posts__empty"><p>No posts yet.</p><\/div>';
+          return;
+        }
+
+        const posts = await Promise.all(mdFiles.map(async f => {
+          const r = await fetch(RAW_BASE + f.name);
+          const text = await r.text();
+          const { data, content } = parseFrontmatter(text);
+          return { filename: f.name, data, content };
+        }));
+
+        const hash = window.location.hash.slice(1);
+        if (hash) {
+          const post = posts.find(p => p.filename === decodeURIComponent(hash));
+          if (post) { showPost(post); return; }
+        }
+
+        list.innerHTML = posts.map(p => `
+          <article class="post-entry">
+            <h2 class="post-entry__title">
+              <a href="#${encodeURIComponent(p.filename)}">${p.data.title || 'Untitled'}<\/a>
+            <\/h2>
+            <p class="post-entry__date">${formatDate(p.data.date)}<\/p>
+            ${p.data.excerpt ? `<p class="post-entry__excerpt">${p.data.excerpt}<\/p>` : ''}
+          <\/article>
+        `).join('');
+
+        list.querySelectorAll('a[href^="#"]').forEach(a => {
+          a.addEventListener('click', async e => {
+            e.preventDefault();
+            const filename = decodeURIComponent(a.getAttribute('href').slice(1));
+            const post = posts.find(p => p.filename === filename);
+            if (post) {
+              history.pushState(null, '', '#' + encodeURIComponent(filename));
+              showPost(post);
+            }
+          });
+        });
+
+      } catch (err) {
+        list.innerHTML = '<div class="posts__empty"><p>Could not load posts right now.<\/p><\/div>';
+        console.error(err);
+      }
+    }
+
+    function showPost(post) {
+      document.querySelector('main > section.page-header').style.display = 'none';
+      document.querySelector('section.posts').style.display = 'none';
+      const view = document.getElementById('postView');
+      document.getElementById('postTitle').textContent = post.data.title || 'Untitled';
+      document.getElementById('postDate').textContent = formatDate(post.data.date);
+      document.getElementById('postContent').innerHTML = marked.parse(post.content);
+      view.style.display = '';
+    }
+
+    window.addEventListener('popstate', () => {
+      if (!window.location.hash) {
+        document.getElementById('postView').style.display = 'none';
+        document.querySelector('main > section.page-header').style.display = '';
+        document.querySelector('section.posts').style.display = '';
+      }
+    });
+
+    loadPosts();
   </script>
 </body>
 </html>
