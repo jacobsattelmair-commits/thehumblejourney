@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health — The Humble Journey</title>
+  <meta name="description" content="Jacob Sattelmair's personal health dashboard.">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .health-intro { color: var(--color-muted); font-size: 0.875rem; margin-top: 0.35rem; }
+    #loginScreen {
+      min-height: calc(100vh - var(--nav-h));
+      display: flex;
+      align-items: center;
+    }
+    #loginScreen .inner { max-width: 420px; }
+    #loginScreen h1 { font-size: clamp(1.75rem, 4vw, 2.5rem); margin-bottom: 0.75rem; }
+    #loginScreen p { color: var(--color-muted); margin-bottom: 2rem; }
+    .btn-login {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 1.4rem;
+      background: var(--color-accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background var(--trans);
+      text-decoration: none;
+    }
+    .btn-login:hover { background: var(--color-accent-dk); color: #fff; text-decoration: none; }
+    .health-section { padding: 3rem 0; border-bottom: 1px solid var(--color-border); }
+    .health-section:last-of-type { border-bottom: none; }
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      font-weight: normal;
+      margin-bottom: 1.5rem;
+      color: var(--color-text);
+    }
+    .section-subtitle {
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 1rem;
+      margin-top: 2rem;
+    }
+    .section-subtitle:first-of-type { margin-top: 0; }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .metric-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      transition: border-color var(--trans);
+    }
+    .metric-card__label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+    }
+    .metric-card__value {
+      font-family: var(--font-serif);
+      font-size: 2rem;
+      line-height: 1;
+      color: var(--color-text);
+    }
+    .metric-card__unit { font-size: 0.75rem; color: var(--color-muted); }
+    .metric-card__sub { font-size: 0.78rem; color: var(--color-muted); margin-top: 0.1rem; }
+    .metric-card[data-level="high"] { border-color: #2c5f4a; }
+    .metric-card[data-level="high"] .metric-card__value { color: #2c5f4a; }
+    .metric-card[data-level="med"] { border-color: #b07d2a; }
+    .metric-card[data-level="med"] .metric-card__value { color: #b07d2a; }
+    .metric-card[data-level="low"] { border-color: #b94040; }
+    .metric-card[data-level="low"] .metric-card__value { color: #b94040; }
+    .sync-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    .sync-info { font-size: 0.8rem; color: var(--color-muted); }
+    .btn-sm {
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      color: var(--color-accent);
+      cursor: pointer;
+      transition: background var(--trans), border-color var(--trans);
+      text-decoration: none;
+    }
+    .btn-sm:hover { background: var(--color-border); text-decoration: none; }
+    .btn-sm--primary { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+    .btn-sm--primary:hover { background: var(--color-accent-dk); color: #fff; border-color: var(--color-accent-dk); }
+    .chart-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .chart-tab {
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 0.4rem 0.9rem;
+      border-radius: 100px;
+      border: 1px solid var(--color-border);
+      background: none;
+      color: var(--color-muted);
+      cursor: pointer;
+      transition: all var(--trans);
+    }
+    .chart-tab.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+    .chart-panel { display: none; }
+    .chart-panel.active { display: block; }
+    .chart-wrap { position: relative; height: 200px; margin-bottom: 1.5rem; }
+    .chart-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-muted);
+      margin-bottom: 0.5rem;
+    }
+    .setup-card { border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; }
+    .setup-card h3 { font-family: var(--font-serif); font-size: 1.05rem; font-weight: normal; margin-bottom: 0.5rem; }
+    .setup-card p { color: var(--color-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+    .setup-card p:last-child { margin-bottom: 0; }
+    .setup-card code { font-family: monospace; font-size: 0.8rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 4px; padding: 0.15rem 0.4rem; word-break: break-all; }
+    .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.4rem; }
+    .status-dot--connected { background: #2c5f4a; }
+    .status-dot--disconnected { background: #ccc; }
+    .setup-steps { list-style: none; counter-reset: steps; padding: 0; margin: 0.75rem 0; }
+    .setup-steps li { counter-increment: steps; font-size: 0.875rem; color: var(--color-muted); padding: 0.3rem 0 0.3rem 2rem; position: relative; }
+    .setup-steps li::before { content: counter(steps); position: absolute; left: 0; width: 1.4rem; height: 1.4rem; border-radius: 50%; background: var(--color-border); color: var(--color-muted); font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; justify-content: center; top: 0.3rem; }
+    .health-footer { padding: 2rem 0 5rem; }
+    .logout-link { font-size: 0.8rem; color: var(--color-muted); cursor: pointer; background: none; border: none; text-decoration: underline; text-underline-offset: 3px; }
+    .logout-link:hover { color: var(--color-text); }
+    .no-data { color: var(--color-muted); font-size: 0.875rem; font-style: italic; }
+    @media (max-width: 900px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .metric-grid { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav__inner">
+    <a href="index.html" class="nav__name">The Humble Journey</a>
+    <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav__links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="thoughts.html">Thoughts</a></li>
+      <li><a href="bio.html">Bio</a></li>
+      <li><a href="photos.html">Photos</a></li>
+      <li><a href="health.html" class="active">Health</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div id="loginScreen" style="display:none">
+  <div class="container">
+    <div class="inner">
+      <span class="label">Health</span>
+      <h1>Health Dashboard</h1>
+      <p>This page is private. Sign in to view health metrics.</p>
+      <button class="btn-login" id="loginBtn">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<main id="dashboard" style="display:none">
+  <section class="page-header">
+    <div class="container--wide">
+      <span class="label">Health</span>
+      <h1>My Health Dashboard</h1>
+      <p class="health-intro" id="lastSyncedText">Loading…</p>
+    </div>
+  </section>
+
+  <section class="health-section">
+    <div class="container--wide">
+      <div class="sync-bar">
+        <h2 class="section-title" style="margin-bottom:0">Today</h2>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <span class="sync-info" id="syncStatus"></span>
+          <button class="btn-sm" id="refreshBtn">↻ Refresh</button>
+        </div>
+      </div>
+      <p class="section-subtitle">Whoop</p>
+      <div class="metric-grid" id="whoopCards">
+        <div class="metric-card" id="card-recovery">
+          <span class="metric-card__label">Recovery</span>
+          <span class="metric-card__value">—</span>
+          <span class="metric-card__unit">score</span>
+        </div>
+        <div class="metric-card" id="card-hrv">
+          <span class="metric-card__label">HRV</span>
+          <span class="metric-card__value">—</span>
+          <span class="metric-card__unit">ms</span>
+        </div>
+        <div class="metric-card" id="card-sleep">
+          <span class="metric-card__label">Sleep Performance</span>
+          <span class="metric-card__value">—</span>
+          <span class="metric-card__unit">%</span>
+        </div>
+        <div class="metric-card" id="card-strain">
+          <span class="metric-card__label">Strain</span>
+          <span class="metric-card__value">—</span>
+          <span class="metric-card__unit">/ 21</span>
+        </div>
+      </div>
+      <p class="section-subtitle">Apple Health</p>
+      <div class="metric-grid" id="appleCards">
+        <div class="metric-card" id="card-steps">
+          <span class="metric-card__label">Steps</span>
+          <span class="metric-card__value">—</span>
+          <span class="metric-card__unit">steps</span>
+        </div>
+        <div class="metric-card" id="card-calories">
+          <span class="metric-card__label">Active Calories</span>
+          <span class="metric-card__value">—</span>
+          <span class="metric-card__unit">kcal</span>
+        </div>
+        <div class="metric-card" id="card-rhr">
+          <span class="metric-card__label">Resting HR</span>
+          <span class="metric-card__value">—</span>
+          <span class="metric-card__unit">bpm</span>
+        </div>
+        <div class="metric-card" id="card-vo2max">
+          <span class="metric-card__label">VO₂ Max</span>
+          <span class="metric-card__value">—</span>
+          <span class="metric-card__unit">mL/kg/min</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="health-section">
+    <div class="container--wide">
+      <h2 class="section-title">30-Day Trends</h2>
+      <div class="chart-tabs">
+        <button class="chart-tab active" data-panel="whoopCharts">Whoop</button>
+        <button class="chart-tab" data-panel="appleCharts">Apple Health</button>
+      </div>
+      <div id="whoopCharts" class="chart-panel active">
+        <p class="chart-label">Recovery Score</p>
+        <div class="chart-wrap"><canvas id="recoveryChart"></canvas></div>
+        <p class="chart-label">HRV (ms)</p>
+        <div class="chart-wrap"><canvas id="hrvChart"></canvas></div>
+        <p class="chart-label">Sleep Performance (%)</p>
+        <div class="chart-wrap"><canvas id="sleepChart"></canvas></div>
+      </div>
+      <div id="appleCharts" class="chart-panel">
+        <p class="chart-label">Steps</p>
+        <div class="chart-wrap"><canvas id="stepsChart"></canvas></div>
+        <p class="chart-label">Active Calories</p>
+        <div class="chart-wrap"><canvas id="caloriesChart"></canvas></div>
+        <p class="chart-label">Resting Heart Rate (bpm)</p>
+        <div class="chart-wrap"><canvas id="rhrChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="health-section">
+    <div class="container">
+      <h2 class="section-title">Data Sources</h2>
+      <div class="setup-card">
+        <h3>
+          <span class="status-dot" id="whoopStatusDot"></span>
+          Whoop
+        </h3>
+        <p id="whoopStatusText">Connect your Whoop account to sync recovery, HRV, sleep, and strain data automatically every morning.</p>
+        <a class="btn-sm btn-sm--primary" href="/.netlify/functions/whoop-auth" id="whoopConnectBtn">Connect Whoop</a>
+      </div>
+      <div class="setup-card">
+        <h3>
+          <span class="status-dot" id="appleStatusDot"></span>
+          Apple Health
+        </h3>
+        <p>Apple Health does not have a web API, so use the free <strong>Health Auto Export</strong> app to send data to this dashboard automatically every day.</p>
+        <ol class="setup-steps">
+          <li>Download <strong>Health Auto Export</strong> from the App Store (free)</li>
+          <li>Open the app and go to <strong>Automations</strong> then <strong>Add Automation</strong></li>
+          <li>Choose <strong>REST API</strong> as the export type</li>
+          <li>Set the URL to: <code id="appleWebhookUrl"></code></li>
+          <li>Add a header: Key = <code>Authorization</code>, Value = <code>Bearer YOUR_SECRET</code> (get this secret from your Netlify dashboard under Environment variables, APPLE_HEALTH_SECRET)</li>
+          <li>Select metrics: Steps, Active Energy Burned, Resting Heart Rate, VO2 Max</li>
+          <li>Set schedule to <strong>Daily</strong> and tap Save</li>
+        </ol>
+        <p id="appleHealthStatus"></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="health-footer">
+    <div class="container">
+      <button class="logout-link" id="logoutBtn">Sign out</button>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <p>&copy; 2025 Jacob Sattelmair &mdash; thehumblejourney.com</p>
+  </div>
+</footer>
+
+<script src="main.js"></script>
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = '#6b6b66';
+  const ACCENT = '#2c5f4a';
+  const ACCENT_ALPHA = 'rgba(44,95,74,0.12)';
+  const MED_COLOR = '#b07d2a';
+  const chartInstances = {};
+
+  function makeLineChart(id, label, data, labels, color) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    if (chartInstances[id]) chartInstances[id].destroy();
+    chartInstances[id] = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{ label, data, borderColor: color || ACCENT, backgroundColor: ACCENT_ALPHA, borderWidth: 1.5, pointRadius: 2, pointHoverRadius: 4, fill: true, tension: 0.3 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { grid: { color: '#e0dfd8' }, ticks: { maxTicksLimit: 5 } } } }
+    });
+  }
+
+  function makeBarChart(id, label, data, labels, color) {
+    const ctx = document.getElementById(id);
+    if (!ctx) return;
+    if (chartInstances[id]) chartInstances[id].destroy();
+    chartInstances[id] = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ label, data, backgroundColor: (color || ACCENT) + '99', borderRadius: 3 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { grid: { color: '#e0dfd8' }, ticks: { maxTicksLimit: 5 } } } }
+    });
+  }
+
+  function showLogin() {
+    document.getElementById('loginScreen').style.display = '';
+    document.getElementById('dashboard').style.display = 'none';
+  }
+  function showDashboard() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = '';
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', function () { window.netlifyIdentity.open(); });
+  document.getElementById('logoutBtn').addEventListener('click', function () { window.netlifyIdentity.logout(); });
+  document.getElementById('refreshBtn').addEventListener('click', loadHealthData);
+
+  window.netlifyIdentity.on('init', function (user) { if (user) { showDashboard(); loadHealthData(); } else showLogin(); });
+  window.netlifyIdentity.on('login', function () { showDashboard(); loadHealthData(); window.netlifyIdentity.close(); });
+  window.netlifyIdentity.on('logout', showLogin);
+
+  document.getElementById('appleWebhookUrl').textContent = window.location.origin + '/.netlify/functions/apple-health-ingest';
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('whoop') === 'connected') { history.replaceState({}, '', window.location.pathname); }
+
+  document.querySelectorAll('.chart-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      document.querySelectorAll('.chart-tab').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.chart-panel').forEach(function (p) { p.classList.remove('active'); });
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.panel).classList.add('active');
+    });
+  });
+
+  function setCard(id, value, decimals) {
+    const card = document.getElementById(id);
+    if (!card) return;
+    const el = card.querySelector('.metric-card__value');
+    if (value == null) { el.textContent = '—'; return; }
+    el.textContent = decimals != null ? parseFloat(value).toFixed(decimals) : Math.round(value).toLocaleString();
+  }
+
+  function setRecoveryLevel(card, score) {
+    if (score == null) { card.removeAttribute('data-level'); return; }
+    if (score >= 67) card.setAttribute('data-level', 'high');
+    else if (score >= 34) card.setAttribute('data-level', 'med');
+    else card.setAttribute('data-level', 'low');
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso + 'T12:00:00');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  async function loadHealthData() {
+    document.getElementById('syncStatus').textContent = 'Loading…';
+    try {
+      const res = await fetch('/.netlify/functions/health-data');
+      if (!res.ok) throw new Error('Failed to load data');
+      const data = await res.json();
+      renderWhoop(data.whoop || []);
+      renderApple(data.appleHealth || []);
+      renderSetupStatus(data);
+      const synced = data.lastSynced ? new Date(data.lastSynced).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : null;
+      document.getElementById('lastSyncedText').textContent = synced ? 'Last synced ' + synced : 'No data synced yet — set up your data sources below.';
+      document.getElementById('syncStatus').textContent = '';
+    } catch (e) {
+      document.getElementById('syncStatus').textContent = 'Could not load data.';
+    }
+  }
+
+  function renderWhoop(records) {
+    const today = records[records.length - 1] || {};
+    setCard('card-recovery', today.recoveryScore);
+    setRecoveryLevel(document.getElementById('card-recovery'), today.recoveryScore);
+    setCard('card-hrv', today.hrv, 1);
+    setCard('card-sleep', today.sleepScore);
+    setCard('card-strain', today.strain, 1);
+    const last30 = records.slice(-30);
+    const labels = last30.map(function (r) { return fmtDate(r.date); });
+    makeLineChart('recoveryChart', 'Recovery', last30.map(function (r) { return r.recoveryScore; }), labels);
+    makeLineChart('hrvChart', 'HRV', last30.map(function (r) { return r.hrv; }), labels, MED_COLOR);
+    makeBarChart('sleepChart', 'Sleep %', last30.map(function (r) { return r.sleepScore; }), labels);
+  }
+
+  function renderApple(records) {
+    const today = records[records.length - 1] || {};
+    setCard('card-steps', today.steps);
+    setCard('card-calories', today.activeCalories);
+    setCard('card-rhr', today.restingHR);
+    setCard('card-vo2max', today.vo2Max, 1);
+    const last30 = records.slice(-30);
+    const labels = last30.map(function (r) { return fmtDate(r.date); });
+    makeBarChart('stepsChart', 'Steps', last30.map(function (r) { return r.steps; }), labels);
+    makeBarChart('caloriesChart', 'Active Cal', last30.map(function (r) { return r.activeCalories; }), labels, MED_COLOR);
+    makeLineChart('rhrChart', 'Resting HR', last30.map(function (r) { return r.restingHR; }), labels, '#b94040');
+  }
+
+  function renderSetupStatus(data) {
+    const whoopConnected = data.whoopConnected === true;
+    const appleConnected = (data.appleHealth || []).length > 0;
+    const whoopDot = document.getElementById('whoopStatusDot');
+    whoopDot.className = 'status-dot ' + (whoopConnected ? 'status-dot--connected' : 'status-dot--disconnected');
+    const whoopText = document.getElementById('whoopStatusText');
+    const whoopBtn = document.getElementById('whoopConnectBtn');
+    if (whoopConnected) {
+      whoopText.textContent = 'Whoop is connected. Recovery, HRV, sleep, and strain sync automatically every morning at 6 AM.';
+      whoopBtn.textContent = 'Reconnect Whoop';
+    }
+    const appleDot = document.getElementById('appleStatusDot');
+    appleDot.className = 'status-dot ' + (appleConnected ? 'status-dot--connected' : 'status-dot--disconnected');
+    const appleStatus = document.getElementById('appleHealthStatus');
+    if (appleConnected) {
+      appleStatus.textContent = 'Apple Health data is flowing. Last entry: ' + fmtDate((data.appleHealth[data.appleHealth.length - 1] || {}).date);
+    }
+  }
+})();
+</script>
+</body>
+</html>
