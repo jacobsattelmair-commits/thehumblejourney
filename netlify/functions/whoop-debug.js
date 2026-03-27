@@ -1,36 +1,38 @@
-// whoop-debug.js — diagnostic endpoint to test Whoop API auth
+// whoop-debug.js — test all Whoop API endpoints
 import { getStore } from '@netlify/blobs';
+
+async function testEndpoint(path, token) {
+  const res = await fetch('https://api.prod.whoop.com' + path, {
+    headers: { Authorization: 'Bearer ' + token },
+  });
+  const body = await res.text();
+  return { status: res.status, body: body.substring(0, 300) };
+}
 
 export default async function handler() {
   const store = getStore('health');
   const tokens = await store.get('whoop-tokens', { type: 'json' });
+  if (!tokens) return new Response('No tokens', { status: 200 });
 
-  if (!tokens) {
-    return new Response(JSON.stringify({ error: 'No tokens stored' }), {
-      status: 200, headers: { 'Content-Type': 'application/json' }
-    });
+  const t = tokens.access_token;
+  const results = {};
+
+  const paths = [
+    '/developer/v1/user/profile/basic',
+    '/developer/v1/recovery/?limit=1',
+    '/developer/v1/activity/sleep/?limit=1',
+    '/developer/v1/cycle/?limit=1',
+    '/developer/v1/cycles/?limit=1',
+  ];
+
+  for (const path of paths) {
+    results[path] = await testEndpoint(path, t);
   }
 
-  const info = {
-    tokenKeys: Object.keys(tokens),
-    obtained_at: tokens.obtained_at,
-    ageMinutes: tokens.obtained_at ? Math.round((Date.now() - tokens.obtained_at) / 60000) : null,
-    token_type: tokens.token_type,
-    scope: tokens.scope,
-    expires_in: tokens.expires_in,
-    accessTokenPrefix: tokens.access_token ? tokens.access_token.substring(0, 20) + '...' : 'MISSING',
-    hasRefreshToken: !!tokens.refresh_token,
-  };
-
-  const testRes = await fetch('https://api.prod.whoop.com/developer/v1/user/profile/basic', {
-    headers: { Authorization: 'Bearer ' + tokens.access_token },
-  });
-
-  const testBody = await testRes.text();
-
   return new Response(JSON.stringify({
-    tokenInfo: info,
-    apiTest: { status: testRes.status, body: testBody }
+    scope: tokens.scope,
+    ageMinutes: Math.round((Date.now() - tokens.obtained_at) / 60000),
+    results
   }, null, 2), {
     status: 200, headers: { 'Content-Type': 'application/json' }
   });
