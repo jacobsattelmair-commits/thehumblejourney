@@ -11,47 +11,44 @@ export default async function handler(req) {
     const auth = req.headers.get('authorization') || '';
     const token = auth.replace(/^Bearer\s+/i, '').trim();
     if (token !== process.env.APPLE_HEALTH_SECRET) {
-      console.log('Auth mismatch. Token received:', JSON.stringify(token));
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // Read raw body text first for debugging
     const rawBody = await req.text();
-    console.log('Received body (first 500):', rawBody.slice(0, 500));
-
     let body;
     try {
       body = JSON.parse(rawBody);
     } catch {
-      console.error('JSON parse failed');
       return new Response('Invalid JSON', { status: 400 });
     }
 
-    // Health Auto Export sends: { data: [ { name, data: [{qty, date}] } ] }
-    const metrics = body.data || [];
-    console.log('Metrics count:', metrics.length);
-    if (metrics.length > 0) console.log('First metric:', JSON.stringify(metrics[0]).slice(0, 200));
+    // Health Auto Export sends: { data: { metrics: [ { name, units, data: [{qty, date}] } ] } }
+    const metrics = (body.data && body.data.metrics) || body.data || [];
+    console.log('Metrics count:', Array.isArray(metrics) ? metrics.length : 'not array');
 
     const today = new Date().toISOString().slice(0, 10);
     const entry = { date: today };
 
-    for (const metric of metrics) {
-      const latest = Array.isArray(metric.data) ? metric.data[0] : null;
-      if (!latest) continue;
-      const qty = latest.qty ?? latest.value ?? null;
-      const name = (metric.name || '').toLowerCase().replace(/\s+/g, '_');
-      switch (name) {
-        case 'step_count':
-        case 'steps':
-          entry.steps = qty ? Math.round(qty) : null; break;
-        case 'active_energy_burned':
-        case 'active_energy':
-          entry.activeCalories = qty ? Math.round(qty) : null; break;
-        case 'resting_heart_rate':
-        case 'resting_hr':
-          entry.restingHR = qty ? Math.round(qty) : null; break;
-        case 'vo2_max':
-          entry.vo2Max = qty ? Math.round(qty * 10) / 10 : null; break;
+    if (Array.isArray(metrics)) {
+      for (const metric of metrics) {
+        const latest = Array.isArray(metric.data) ? metric.data[0] : null;
+        if (!latest) continue;
+        const qty = latest.qty ?? latest.value ?? null;
+        const name = (metric.name || '').toLowerCase().replace(/\s+/g, '_');
+        console.log('Metric:', metric.name, '->', name, '=', qty);
+        switch (name) {
+          case 'step_count':
+          case 'steps':
+            entry.steps = qty ? Math.round(qty) : null; break;
+          case 'active_energy_burned':
+          case 'active_energy':
+            entry.activeCalories = qty ? Math.round(qty) : null; break;
+          case 'resting_heart_rate':
+          case 'resting_hr':
+            entry.restingHR = qty ? Math.round(qty) : null; break;
+          case 'vo2_max':
+            entry.vo2Max = qty ? Math.round(qty * 10) / 10 : null; break;
+        }
       }
     }
 
@@ -68,7 +65,7 @@ export default async function handler(req) {
 
     return new Response('OK: ' + JSON.stringify(entry), { status: 200 });
   } catch (err) {
-    console.error('apple-health-ingest error:', err.message, err.stack);
+    console.error('apple-health-ingest error:', err.message);
     return new Response('Server error: ' + err.message, { status: 500 });
   }
 }
