@@ -7,27 +7,25 @@ export default async function handler(req) {
       return new Response('Method not allowed', { status: 405 });
     }
 
-    // Verify shared secret
+    // Verify shared secret — strip "Bearer" prefix and any extra whitespace
     const auth = req.headers.get('authorization') || '';
-    const expected = 'Bearer ' + process.env.APPLE_HEALTH_SECRET;
-    if (auth !== expected) {
-      console.log('Auth mismatch. Received:', auth, 'Expected prefix: Bearer ...');
+    const token = auth.replace(/^Bearer\s+/i, '').trim();
+    if (token !== process.env.APPLE_HEALTH_SECRET) {
+      console.log('Auth mismatch. Token received:', JSON.stringify(token));
       return new Response('Unauthorized', { status: 401 });
     }
 
     // Read raw body text first for debugging
     const rawBody = await req.text();
-    console.log('Received body:', rawBody.slice(0, 500));
+    console.log('Received body (first 500):', rawBody.slice(0, 500));
 
     let body;
     try {
       body = JSON.parse(rawBody);
     } catch {
-      console.error('JSON parse failed for body:', rawBody.slice(0, 200));
+      console.error('JSON parse failed');
       return new Response('Invalid JSON', { status: 400 });
     }
-
-    console.log('Parsed body keys:', Object.keys(body));
 
     // Health Auto Export sends: { data: [ { name, data: [{qty, date}] } ] }
     const metrics = body.data || [];
@@ -42,22 +40,17 @@ export default async function handler(req) {
       if (!latest) continue;
       const qty = latest.qty ?? latest.value ?? null;
       const name = (metric.name || '').toLowerCase().replace(/\s+/g, '_');
-      console.log('Metric name:', metric.name, '-> normalized:', name, 'qty:', qty);
       switch (name) {
         case 'step_count':
-        case 'stepcount':
         case 'steps':
           entry.steps = qty ? Math.round(qty) : null; break;
         case 'active_energy_burned':
-        case 'activeenergyburned':
         case 'active_energy':
           entry.activeCalories = qty ? Math.round(qty) : null; break;
         case 'resting_heart_rate':
-        case 'restingheartrate':
         case 'resting_hr':
           entry.restingHR = qty ? Math.round(qty) : null; break;
         case 'vo2_max':
-        case 'vo2max':
           entry.vo2Max = qty ? Math.round(qty * 10) / 10 : null; break;
       }
     }
