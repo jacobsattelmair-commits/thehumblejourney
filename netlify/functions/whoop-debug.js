@@ -1,4 +1,4 @@
-// whoop-debug.js — test all Whoop API endpoints
+// whoop-debug.js — brute force path finder
 import { getStore } from '@netlify/blobs';
 
 async function testEndpoint(path, token) {
@@ -6,7 +6,7 @@ async function testEndpoint(path, token) {
     headers: { Authorization: 'Bearer ' + token },
   });
   const body = await res.text();
-  return { status: res.status, body: body.substring(0, 300) };
+  return { status: res.status, body: body.substring(0, 150) };
 }
 
 export default async function handler() {
@@ -18,22 +18,29 @@ export default async function handler() {
   const results = {};
 
   const paths = [
-    '/developer/v1/user/profile/basic',
-    '/developer/v1/recovery/?limit=1',
-    '/developer/v1/activity/sleep/?limit=1',
-    '/developer/v1/cycle/?limit=1',
-    '/developer/v1/cycles/?limit=1',
+    '/developer/v1/recovery',
+    '/developer/v1/recovery/',
+    '/developer/v1/activity/recovery',
+    '/developer/v1/activity/recovery/',
+    '/developer/v1/sleep',
+    '/developer/v1/sleep/',
+    '/developer/v1/activity/sleep',
+    '/developer/v1/activity/sleep/',
+    '/developer/v1/physiological_cycles',
+    '/developer/v1/physiological_cycles/',
+    '/developer/v2/recovery',
+    '/developer/v2/recovery/',
+    '/developer/v2/sleep',
+    '/developer/v2/sleep/',
+    '/developer/v2/physiological_cycles',
+    '/developer/v2/physiological_cycles/',
   ];
 
   for (const path of paths) {
     results[path] = await testEndpoint(path, t);
   }
 
-  return new Response(JSON.stringify({
-    scope: tokens.scope,
-    ageMinutes: Math.round((Date.now() - tokens.obtained_at) / 60000),
-    results
-  }, null, 2), {
+  return new Response(JSON.stringify(results, null, 2), {
     status: 200, headers: { 'Content-Type': 'application/json' }
   });
 }
