@@ -419,7 +419,13 @@
       renderApple(data.appleHealth || []);
       renderSetupStatus(data);
       const synced = data.lastSynced ? new Date(data.lastSynced).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : null;
-      document.getElementById('lastSyncedText').textContent = synced ? 'Last synced ' + synced : 'No data synced yet — set up your data sources below.';
+      const hasAnyData = (data.whoop || []).length > 0 || (data.appleHealth || []).length > 0;
+          const latestDate = (data.whoop || []).length > 0 ? fmtDate(data.whoop[data.whoop.length - 1].date) : null;
+          document.getElementById('lastSyncedText').textContent = synced
+            ? 'Last synced ' + synced
+            : hasAnyData
+              ? 'Syncing daily' + (latestDate ? ' — last data from ' + latestDate : '')
+              : 'No data synced yet — set up your data sources below.';
       document.getElementById('syncStatus').textContent = '';
     } catch (e) {
       document.getElementById('syncStatus').textContent = 'Could not load data.';
